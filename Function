@@ -1,0 +1,207 @@
+Function BretonIPA(sText As String, Optional dialect)
+    If IsMissing(dialect) Then dialect = "KLT"
+    
+    Dim mots() As String
+    Dim i As Long
+    Dim sResult As String
+    Dim motIPA As String
+    Dim dernierChar As String
+    Dim premierChar As String
+    Dim sep As String
+    
+    ' Consonnes voisées et sourdes
+    Dim vois As String: vois = "b d g j v z"
+    Dim sourd As String: sourd = "p t k f s ʃ x"
+    
+    ' --- Séparation du texte en mots ---
+    mots = Split(sText, " ")
+    sResult = ""
+    
+    For i = LBound(mots) To UBound(mots)
+        motIPA = TranscrireMot(mots(i), dialect)
+        
+        ' --- Sandhi ---
+        If i > LBound(mots) Then
+            dernierChar = Right(mots(i - 1), 1)
+            premierChar = Left(mots(i), 1)
+            
+            sep = ""
+            
+            If InStr(vois, dernierChar) > 0 Then
+                If InStr(vois, premierChar) > 0 Then
+                    motIPA = ConvertToSourde(motIPA)
+                    sep = "‿"
+                ElseIf InStr(sourd, premierChar) > 0 Then
+                    motIPA = ConvertToSourde(motIPA)
+                    sep = "‿"
+                ElseIf InStr("aeiouyäëœyàâéèêëïôùüû", premierChar) > 0 Then
+                    sep = "‿"
+                End If
+            ElseIf InStr(sourd, dernierChar) > 0 Then
+                If InStr(vois, premierChar) > 0 Then
+                    motIPA = ConvertToVoisee(motIPA)
+                    sep = "‿"
+                ElseIf InStr("aeiouyäëœyàâéèêëïôùüû", premierChar) > 0 Then
+                    motIPA = ConvertToVoisee(motIPA)
+                    sep = "‿"
+                Else
+                    sep = " "
+                End If
+            Else
+                sep = " "
+            End If
+        Else
+            sep = ""
+        End If
+        
+        sResult = sResult & sep & motIPA
+    Next i
+    
+    BretonIPA = sResult
+End Function
+
+' --- Transcription d’un mot isolé ---
+Function TranscrireMot(sText As String, dialect As String) As String
+    Dim i As Long, vPos As Long
+    Dim sResult As String, syl As String, sChar As String, next1 As String
+    Dim syllables() As String, accentSyll As Long
+    Dim c As Long, syllCount As Long
+    
+    If IsNull(sText) Then sText = ""
+    sText = LCase(CStr(sText))
+    
+    ' --- Découpage en syllabes ---
+    syllCount = 1
+    ReDim syllables(Len(sText))
+    syllables(syllCount) = ""
+    
+    For c = 1 To Len(sText)
+        sChar = Mid(sText, c, 1)
+        If InStr("aeiouyäëœyàâéèêëïôùüû", sChar) > 0 Then
+            If syllables(syllCount) <> "" Then
+                syllCount = syllCount + 1
+                syllables(syllCount) = sChar
+            Else
+                syllables(syllCount) = sChar
+            End If
+        Else
+            syllables(syllCount) = syllables(syllCount) & sChar
+        End If
+    Next c
+    
+    ' --- Accentuation ---
+    If dialect = "Vannetais" Then
+        accentSyll = syllCount
+    Else
+        accentSyll = IIf(syllCount > 1, syllCount - 1, 1)
+    End If
+    
+    Dim voyelles As String: voyelles = "aeiouyäëœyàâéèêëïôùüû"
+    Dim consonnesVoisees As String: consonnesVoisees = "gdbjvzc'h"
+    
+    sResult = ""
+    For i = 1 To syllCount
+        syl = syllables(i)
+        vPos = 1
+        
+        Do While vPos <= Len(syl)
+            sChar = Mid(syl, vPos, 1)
+            next1 = ""
+            If vPos < Len(syl) Then next1 = Mid(syl, vPos + 1, 1)
+            
+            ' --- Trigramme c'h ---
+            If vPos <= Len(syl) - 2 Then
+                If Mid(syl, vPos, 3) = "c'h" Then
+                    If i = syllCount Then sResult = sResult & "x" Else sResult = sResult & "χ"
+                    vPos = vPos + 3: GoTo NextChar
+                End If
+            End If
+            
+            ' --- Digrammes ---
+            Select Case Mid(syl, vPos, 2)
+                Case "ch": sResult = sResult & "ʃ": vPos = vPos + 2: GoTo NextChar
+                Case "zh": sResult = sResult & "z / h": vPos = vPos + 2: GoTo NextChar
+                Case "ai": sResult = sResult & "ai": vPos = vPos + 2: GoTo NextChar
+                Case "au": sResult = sResult & "ay": vPos = vPos + 2: GoTo NextChar
+                Case "ei": sResult = sResult & "ej": vPos = vPos + 2: GoTo NextChar
+                Case "ou": sResult = sResult & "u": vPos = vPos + 2: GoTo NextChar
+                Case "eü": sResult = sResult & "ey": vPos = vPos + 2: GoTo NextChar
+            End Select
+            
+            ' --- Voyelles et consonnes ---
+            Select Case sChar
+                Case "a": sResult = sResult & "a"
+                Case "e": sResult = sResult & "ɛ"
+                Case "i": sResult = sResult & "i"
+                Case "o": sResult = sResult & "o"
+                Case "u": sResult = sResult & "y"
+                Case "y": sResult = sResult & "j"
+                Case "à": sResult = sResult & "a"
+                Case "â": sResult = sResult & "aː"
+                Case "é": sResult = sResult & "e"
+                Case "è": sResult = sResult & "ɛ"
+                Case "ê": sResult = sResult & "ɛː"
+                Case "ë": sResult = sResult & "ə"
+                Case "ï": sResult = sResult & "i"
+                Case "ô": sResult = sResult & "oː"
+                Case "ù","ü","û": sResult = sResult & "y"
+                Case Else
+                    Select Case sChar
+                        Case "b","d","g","j","v","z": sResult = sResult & sChar
+                        Case "c": If InStr("ei", next1) > 0 Then sResult = sResult & "s" Else sResult = sResult & "k"
+                        Case "f","k","l","m","n","p","q","s","t","w","x": sResult = sResult & sChar
+                        Case "r": sResult = sResult & "ʁ"
+                        Case Else: sResult = sResult & sChar
+                    End Select
+            End Select
+            
+            ' --- Voyelle longue si syllabe accentuée + consonne voisée après ---
+            If i = accentSyll And InStr(consonnesVoisees, next1) > 0 And InStr(voyelles, sChar) > 0 Then
+                sResult = sResult & "ː"
+            End If
+            
+NextChar:
+            vPos = vPos + 1
+        Loop
+        
+        ' --- Nasalisation via ñ ---
+        If InStr(syl, "ñ") > 0 Then
+            Dim idx As Long
+            For idx = 2 To Len(syl)
+                If Mid(syl, idx, 1) = "ñ" Then
+                    Mid(sResult, Len(sResult) - (Len(syl) - idx), 1) = Mid(sResult, Len(sResult) - (Len(syl) - idx), 1) & "̃"
+                End If
+            Next idx
+        End If
+        
+        ' --- -nt final ---
+        If Right(syl, 2) = "nt" And i = syllCount Then
+            sResult = Left(sResult, Len(sResult) - 2) & "(t)"
+        End If
+    Next i
+    
+    TranscrireMot = sResult
+End Function
+
+' --- Fonctions auxiliaires pour sandhi ---
+Function ConvertToSourde(sIPA As String) As String
+    sIPA = Replace(sIPA, "g", "k")
+    sIPA = Replace(sIPA, "b", "p")
+    sIPA = Replace(sIPA, "d", "t")
+    sIPA = Replace(sIPA, "v", "f")
+    sIPA = Replace(sIPA, "z", "s")
+    sIPA = Replace(sIPA, "j", "ʃ")
+    sIPA = Replace(sIPA, "ʁ", "r")
+    ConvertToSourde = sIPA
+End Function
+
+Function ConvertToVoisee(sIPA As String) As String
+    sIPA = Replace(sIPA, "k", "g")
+    sIPA = Replace(sIPA, "p", "b")
+    sIPA = Replace(sIPA, "t", "d")
+    sIPA = Replace(sIPA, "f", "v")
+    sIPA = Replace(sIPA, "s", "z")
+    sIPA = Replace(sIPA, "ʃ", "j")
+    sIPA = Replace(sIPA, "r", "ʁ")
+    ConvertToVoisee = sIPA
+End Function
