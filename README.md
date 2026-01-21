@@ -34,8 +34,9 @@ Made with the help of the AIs ChatGPT, Gemini, Claud antropic.
 ### II.2. To do
 1. Add more digrams and trigrams transcriptions ;
 2. Add more dialects descriptions ;
-3. Correct the syllabification and the dots placement ;
-4. Correct the accentuation placements (first and second) ;
-5. Correct the vowel length detection (short, medium, long) ;
-6. Correct the vowel openings ;
-7. Detects some others errors.
+3. Add the "r" colours: [r̥], [r], [ʁ], [ʀ], [ɾ] ;
+4. Correct the syllabification and the dots placement ;
+5. Correct the accentuation placements (first and second) ;
+6. Correct the vowel length detection (short, medium, long) ;
+7. Correct the vowel openings ;
+8. Detects some others errors.
