@@ -12,7 +12,7 @@ poellgor@bedniverel.bzh - https://bedniverel.bzh
 ## II. Descriptions (todo)
 Made with the help of the AIs ChatGPT, Gemini, Claud antropic.
 
-### Added
+### II.1. Added
 1. Dialects transcriptions: Standard, Bigouden, Cornouaillais, Léonard, Goëloard, Trégorois, Vannetais ;
 2. Improved the sandhis' detection ;
 3. Numerotation of each part ;
@@ -31,7 +31,7 @@ Made with the help of the AIs ChatGPT, Gemini, Claud antropic.
 16. Cleaning of double nasalization if present ;
 17. Cleaning of the syllabifications dots error (doubled, endings word dots).
 
-### To do
+### II.2. To do
 1. Add more digrams and trigrams transcriptions ;
 2. Add more dialects descriptions ;
 3. Correct the syllabification and the dots placement ;
